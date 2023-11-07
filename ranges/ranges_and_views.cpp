@@ -9,7 +9,7 @@ using namespace std::literals;
 
 TEST_CASE("ranges")
 {
-    constexpr auto data = helpers::create_numeric_dataset<100>(42);
+    auto data = helpers::create_numeric_dataset<100>(42);
     helpers::print(data, "data");
 
     auto runtime_data = helpers::create_numeric_dataset<100>(42);
