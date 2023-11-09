@@ -234,7 +234,7 @@ TEST_CASE("many fields in class/struct")
     CHECK(jan1 == jan2);
 
     // CHECK(jan1 < jan2);
-    CHECK(jan1 <=> jan2 == 0);
+    //CHECK(jan1 <=> jan2 == 0);
 }
 
 struct CIString

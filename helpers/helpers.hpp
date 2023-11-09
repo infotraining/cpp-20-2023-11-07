@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <utility>
 #include <cstdint>
+#include <array>
 
 namespace helpers
 {
@@ -51,9 +52,9 @@ namespace helpers
         }
         else
         {
-            std::mt19937 mt_rnd{seed};
+            // std::mt19937 mt_rnd{seed};
 
-            std::ranges::generate(data, [&] { return uniform_distr(mt_rnd); });
+            // std::ranges::generate(data, [&] { return uniform_distr(mt_rnd); });
         }
 
         std::array<int, Size> result_data{};

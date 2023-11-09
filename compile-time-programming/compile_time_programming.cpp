@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <helpers.hpp>
 
 using namespace std::literals;
 
@@ -18,5 +19,5 @@ TEST_CASE("consteval")
 
 TEST_CASE("constexpr extensions")
 {
-    REQUIRE(true);
+    constexpr auto data = helpers::create_numeric_dataset<20>();
 }

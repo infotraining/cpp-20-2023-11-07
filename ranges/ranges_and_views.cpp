@@ -208,3 +208,17 @@ TEST_CASE("split")
         CHECK(std::ranges::equal(tokens_span, expected_tokens, std::equal_to{}, [](auto s) { return std::string_view{s.data(), s.size()}; }));
     }
 }
+
+TEST_CASE("reference semantics for ranges")
+{
+    std::vector vec = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+    auto evens = vec | std::views::filter([](int x) { return x % 2 == 0; });
+
+    for(auto& even : evens)
+    {
+        even = -even;
+    }
+
+    print(vec, "vec");
+}
