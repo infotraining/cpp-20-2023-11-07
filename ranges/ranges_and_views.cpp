@@ -222,3 +222,21 @@ TEST_CASE("reference semantics for ranges")
 
     print(vec, "vec");
 }
+
+////////////////////////////////////////
+// utility
+
+template <std::ranges::range TRng>
+    requires requires(std::ranges::range_value_t<TRng> obj) { obj += obj; }
+auto sum(TRng&& rng)
+{
+    //std::remove_cvref_t<decltype(*rng.begin())> sum;
+    std::remove_const_t<std::ranges::range_value_t<TRng>> sum{};
+
+    for(const auto& item : rng)
+    {
+        sum += item;
+    }
+
+    return sum;
+} 
