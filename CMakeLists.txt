@@ -42,6 +42,7 @@ add_subdirectory(ranges)
 add_subdirectory(compare)
 add_subdirectory(std-lib-cpp20)
 add_subdirectory(templates)
+add_subdirectory(small-features)
 
 # Exercises
 add_subdirectory(_exercises/ex-compare)
