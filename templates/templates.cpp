@@ -1,3 +1,4 @@
+#include <array>
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 #include <memory>
@@ -5,7 +6,6 @@
 #include <set>
 #include <string>
 #include <vector>
-#include <array>
 
 using namespace std::literals;
 
@@ -140,7 +140,7 @@ TEST_CASE("aggregates")
 {
     Person p1{42, "Kowalski"};
     Person p2{.name = "Nowak", .height = 1.78};
-    //Person p3{.height = "2.01", .id = 42}; // ERROR
+    // Person p3{.height = "2.01", .id = 42}; // ERROR
 
     auto ptr_p = std::make_unique<Person>(42, "Nowak", 10'000.0); // OK
     Person p3(665, "Anonim");
@@ -154,4 +154,159 @@ TEST_CASE("aggregates")
 
     MyPair mp1{20, 3.14};   // MyPair<int, double>
     MyPair mp2("test", 43); // MyPair<const char*, int>
+}
+
+////////////////////////////////////////////////////////////////////////
+// NTTP - Non-Type Template Parameter
+
+template <size_t N>
+concept PowerOf2 = std::has_single_bit(N);
+
+template <typename T, size_t N>
+    requires PowerOf2<N>
+void zero(std::array<T, N>& arr)
+{
+    for (auto& item : arr)
+        item = T{};
+}
+
+TEST_CASE("NTTP + concepts")
+{
+    std::array<int, 1024> arr1;
+    zero(arr1);
+
+    std::array<int, 100> arr2;
+    // zero(arr2); // ERROR
+}
+
+template <double Factor, typename T>
+auto scale(T x)
+{
+    return x * Factor;
+}
+
+namespace AlternativeTake
+{
+    template <auto Factor, typename T>
+    auto scale(T x)
+    {
+        return x * Factor;
+    }
+} // namespace AlternativeTake
+
+TEST_CASE("NTTP + double, float")
+{
+    CHECK(scale<42.1>(2) == 84.2);
+    CHECK(AlternativeTake::scale<42>(2) == 84);
+    CHECK(AlternativeTake::scale<42.1f>(2) == 84.2f);
+}
+
+//////////////////////////////////////////////////
+
+struct Tax
+{
+    double value;
+
+    constexpr Tax(double v)
+        : value{v}
+    {
+        assert(value >= 0 && v < 1);
+    }
+};
+
+template <Tax Vat> // struct as NTTP
+double calc_gross_price(double net_price)
+{
+    return net_price + net_price * Vat.value;
+}
+
+template <int A, int B, int C, typename T>
+auto poly_calculate(T x)
+{
+    return A * x * x + B * x + C;
+}
+
+template <typename T>
+struct Factors
+{
+    T A, B, C;
+};
+
+namespace SinceCpp20
+{
+    template <auto f, typename T>
+    auto poly_calculate(T x)
+    {
+        return f.A * x * x + f.B * x + f.C;
+    }
+} // namespace SinceCpp20
+
+TEST_CASE("NTTP + struct")
+{
+    constexpr Tax vat_pl{0.23};
+    constexpr Tax vat_ger{0.19};
+
+    CHECK(calc_gross_price<vat_pl>(100.0) == 123.0);
+    CHECK(calc_gross_price<vat_ger>(100.0) == 119.0);
+
+    constexpr Factors linear_f{0.0, 1.0, 1.0};
+
+    CHECK(SinceCpp20::poly_calculate<linear_f>(1.0) == 2.0);
+}
+
+template <size_t N>
+struct Str
+{
+    char value[N];
+
+    constexpr Str(const char (&str)[N])
+    {
+        std::copy(str, str + N, value);
+    }
+
+    friend std::ostream& operator<<(std::ostream& out, const Str& str)
+    {
+        out << str.value;
+
+        return out;
+    }
+
+    auto operator<=>(const Str& other) const = default; // implicitly constexpr
+};
+
+template <Str LogPrefix>
+struct Logger
+{
+    void log(std::string_view msg)
+    {
+        std::cout << LogPrefix << msg << "\n";
+    }
+};
+
+TEST_CASE("NTTP + strings")
+{
+    constexpr Str txt1{"text"};
+    constexpr Str txt2{"text"};
+
+    static_assert(txt1 == txt2);
+
+    Logger<">: "> my_logger_1;
+    my_logger_1.log("Start");
+
+    Logger<"log: "> my_logger_2;
+    my_logger_2.log("End");
+}
+
+template <std::invocable auto GetVat>
+double calc_gross_price(double net_price)
+{
+    return net_price + net_price * GetVat();
+}
+
+TEST_CASE("NTTP + lambda")
+{
+    CHECK(calc_gross_price<[]{ return 0.23; }>(100.0) == 123.0);
+
+    constexpr static auto vat_ger = []{ return 0.19; };
+    CHECK(calc_gross_price<vat_ger>(100.0) == 119.0);
 }
